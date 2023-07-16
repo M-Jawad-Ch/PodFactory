@@ -3,7 +3,9 @@ import json
 from .gpt import prompt_gpt
 
 
-async def generate_episode_section(prompt: str, episode_overview: dict, topic: str, past, functions):
+async def generate_episode_section(prompt: str, episode_overview: dict, topic: str, past, guidelines: str, functions):
+    guidelines = f'These are additional guidelines:\n{guidelines}' if guidelines else ''
+
     messages = [
         {
             'role': 'system',
@@ -26,7 +28,9 @@ Try to make the podcast sound like you are telling a story. Make it seem like an
 and walk the listner through the environment. Make them imagine the sounds and the places. You are the narrator
 of the story.
 
-Remember, the data received from the wikipeida articles is not ours."""
+Remember, the data received from the wikipeida articles is not ours.
+
+{guidelines}"""
         },
         {
             'role': 'user',
@@ -58,7 +62,9 @@ Remember, the data received from the wikipeida articles is not ours."""
     return completion
 
 
-async def generate_intro(episode):
+async def generate_intro(episode, guidelines: str):
+    guidelines = f'These are additional guidelines:\n{guidelines}' if guidelines else ''
+
     messages = [
         {
             'role': 'system',
@@ -72,7 +78,8 @@ That should be at the start of the podcasts. After this, instruct the user to sh
 After that, write a couple of sentences about the episode. Here is the overview of the episode:
 
 {episode}
-"""
+
+{guidelines}"""
         }
     ]
 

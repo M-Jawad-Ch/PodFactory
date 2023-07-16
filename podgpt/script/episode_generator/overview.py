@@ -56,18 +56,22 @@ The number of points in an episode must also be 15 - 20."""
         return completion
 
 
-async def generate_episode_overview(prompt: str, functions):
+async def generate_episode_overview(prompt: str, guidelines: str, functions):
+    guidelines = f'These are additional guidelines:\n{guidelines}' if guidelines else ''
+
     messages = [
         {
             'role': 'system',
             'content':
-            """You are a writer/producer/director. Your job is to write an overview of an entire episode of a podcast series.
+            f"""You are a writer/producer/director. Your job is to write an overview of an entire episode of a podcast series.
 The overview should be in JSON format. The JSON should be a list of the topics to consider including in an episode.
 Write a minimum of ten topics and add more if less are provided to you. An example of your response is given below, strictly follow it:
 
 [ "topic 1", "topic 2", "topic 3", "topic 4", "topic 5", "topic 6", "topic 7", "topic 8", "topic 9", "topic 10" ]
 
 Your generated response must be in the above given syntax, meaning that you must only return a list of topics.
+
+{guidelines}
 """
         },
         {

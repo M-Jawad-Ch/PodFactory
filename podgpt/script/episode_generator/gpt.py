@@ -10,12 +10,9 @@ def completion_to_content(x): return x['choices'][0]['message']['content']
 
 
 async def prompt_gpt(messages, functions=None):
-    global count, tokens
-
     for _ in range(5):
         try:
             await limiter.acquire()
-            count += 1
             if functions:
                 completion = await openai.ChatCompletion.acreate(
                     messages=messages,
@@ -23,18 +20,12 @@ async def prompt_gpt(messages, functions=None):
                     functions=functions
                 )
 
-                tokens += completion['usage']['total_tokens']
-                print(count, tokens)
-
                 return completion
             else:
                 completion = await openai.ChatCompletion.acreate(
                     messages=messages,
                     model='gpt-3.5-turbo-16k',
                 )
-
-                tokens += completion['usage']['total_tokens']
-                print(count, tokens)
 
                 return completion
         except Exception as e:
@@ -63,10 +54,6 @@ You are given an article within the <article> and </article> tags.
 Summarize the given article."""
         }
     ]
-
-    count = get_token_count(f'{messages}')
-    if count > 8_000:
-        return None
 
     return await prompt_gpt(messages)
 

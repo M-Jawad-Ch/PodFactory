@@ -1,6 +1,6 @@
 from django.db import models
 
-# Create your models here.
+from script.models import Script
 
 
 class Music(models.Model):
@@ -35,6 +35,8 @@ class Episode(models.Model):
     name = models.CharField(max_length=200)
     series = models.ForeignKey(Series, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
+    script = models.ForeignKey(
+        Script, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Episode'

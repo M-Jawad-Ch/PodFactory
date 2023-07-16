@@ -28,20 +28,20 @@ functions = {
 }
 
 
-async def generate_episode(overview: str, topic: str, limiter: aiolimiter.AsyncLimiter):
+async def generate_episode(overview: str, topic: str, guidelines: str, limiter: aiolimiter.AsyncLimiter):
     await limiter.acquire()
 
-    episode_overview = completion_to_content(await generate_episode_overview(overview, functions))
+    episode_overview = completion_to_content(await generate_episode_overview(overview, guidelines, functions))
     episode_overview = json.loads(episode_overview)
 
     contents = []
 
     for section in episode_overview:
-        contents.append(await generate_episode_section(section, episode_overview, topic, contents, functions))
+        contents.append(await generate_episode_section(section, episode_overview, topic, contents, guidelines, functions))
 
     contents = [completion_to_content(completion)
                 for completion in contents if completion]
 
-    contents = [completion_to_content(await generate_intro(episode_overview)), *contents]
+    contents = [completion_to_content(await generate_intro(episode_overview, guidelines)), *contents]
 
     return contents
