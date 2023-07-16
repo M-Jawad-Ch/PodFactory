@@ -4,17 +4,30 @@ from django.db import models
 
 
 class Series(models.Model):
+    name = models.CharField(max_length=200)
 
     def episodes(self):
         return Episode.objects.filter(series=self).all()
 
     class Meta:
         verbose_name = 'Series'
-        verbose_name_plural = '(2) Series'
+        verbose_name_plural = 'Series'
+
+    def __str__(self):
+        return self.name
 
 
 class Episode(models.Model):
+    name = models.CharField(max_length=200)
     series = models.ForeignKey(Series, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Episode'
+        verbose_name_plural = 'Episodes'
+
+    def __str__(self):
+        return self.name
 
 
 class SeriesGenerator(models.Model):
@@ -36,7 +49,7 @@ class SeriesGenerator(models.Model):
 
     class Meta:
         verbose_name = 'Series Generator'
-        verbose_name_plural = '(1) Series Generator'
+        verbose_name_plural = 'Series Generator'
 
 
 class Music(models.Model):
@@ -48,4 +61,4 @@ class Music(models.Model):
 
     class Meta:
         verbose_name = 'Music'
-        verbose_name_plural = '(3) Music File'
+        verbose_name_plural = 'Music File'
