@@ -1,5 +1,4 @@
 import json
-import aiolimiter
 
 
 from .wiki import wiki_search
@@ -28,9 +27,7 @@ functions = {
 }
 
 
-async def generate_episode(overview: str, topic: str, guidelines: str, limiter: aiolimiter.AsyncLimiter):
-    await limiter.acquire()
-
+async def generate_episode(overview: str, topic: str, guidelines: str):
     episode_overview = completion_to_content(await generate_episode_overview(overview, guidelines, functions))
     episode_overview = json.loads(episode_overview)
 

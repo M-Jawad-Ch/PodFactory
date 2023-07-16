@@ -1,17 +1,24 @@
-from typing import Optional
 from django.contrib import admin
 from django.http.request import HttpRequest
+from django_object_actions import DjangoObjectActions, action
 
+from threading import Thread
 
 from .models import SeriesGenerator, Music, Series, Episode
 # Register your models here.
 
 
 @admin.register(SeriesGenerator)
-class _SeriesGenerator(admin.ModelAdmin):
+class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
     readonly_fields = ['timestamp', 'running', 'used',
                        'total_episodes', 'episodes_generated', 'series']
     list_display = ['title', 'running', 'used', 'series', 'timestamp']
+
+    change_actions = ('generate',)
+
+    @action(label='Generate', description='Generate an entire series')
+    def generate(self, request, obj: SeriesGenerator):
+        pass
 
 
 class _EpisodeInline(admin.StackedInline):
