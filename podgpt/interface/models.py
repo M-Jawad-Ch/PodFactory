@@ -3,15 +3,29 @@ from django.db import models
 # Create your models here.
 
 
+class Music(models.Model):
+    name = models.SlugField()
+    _file = models.FileField(verbose_name='file')
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Music'
+        verbose_name_plural = 'C - Music'
+
+
 class Series(models.Model):
     name = models.CharField(max_length=200)
+    music = models.ForeignKey(
+        Music, on_delete=models.SET_NULL, null=True, blank=True)
 
     def episodes(self):
         return Episode.objects.filter(series=self).all()
 
     class Meta:
         verbose_name = 'Series'
-        verbose_name_plural = 'Series'
+        verbose_name_plural = 'B - Series'
 
     def __str__(self):
         return self.name
@@ -24,7 +38,7 @@ class Episode(models.Model):
 
     class Meta:
         verbose_name = 'Episode'
-        verbose_name_plural = 'Episodes'
+        verbose_name_plural = 'C - Episodes'
 
     def __str__(self):
         return self.name
@@ -49,16 +63,4 @@ class SeriesGenerator(models.Model):
 
     class Meta:
         verbose_name = 'Series Generator'
-        verbose_name_plural = 'Series Generator'
-
-
-class Music(models.Model):
-    name = models.SlugField()
-    _file = models.FileField(verbose_name='file')
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = 'Music'
-        verbose_name_plural = 'Music File'
+        verbose_name_plural = 'A - Series Generators'
