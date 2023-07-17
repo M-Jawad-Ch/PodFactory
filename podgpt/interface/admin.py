@@ -1,11 +1,12 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.http.request import HttpRequest
-from django_object_actions import DjangoObjectActions, action
+from django_object_actions import action, DjangoObjectActions
 
 from threading import Thread
 
 from .models import SeriesGenerator, Music, Series, Episode
-# Register your models here.
+from script.series_generator.generate import generate_series
+from script.models import Script
 
 
 @admin.register(SeriesGenerator)
@@ -16,9 +17,39 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
 
     change_actions = ('generate',)
 
+    def thread_func(self, obj: SeriesGenerator):
+        obj.running = True
+        obj.save()
+
+        scripts: list[Script] = generate_series(obj.title, obj.guide_lines)
+
+        series = Series.objects.create(name=obj.title, music=obj.music)
+
+        for script in scripts:
+            episode = Episode.objects.create(
+                name=script.title,
+                series=series,
+                script=script
+            )
+
+        obj.running = False
+        obj.used = True
+        obj.save()
+
     @action(label='Generate', description='Generate an entire series')
     def generate(self, request, obj: SeriesGenerator):
-        pass
+        if obj.used:
+            # return messages.warning(request, 'The Series has already been generated.')
+            pass
+
+        if obj.running:
+            # return messages.warning(request, 'This Series is already being generated.')
+            pass
+
+        thread = Thread(target=self.thread_func, args=[obj], daemon=True)
+        thread.start()
+
+        return messages.success(request, 'The Series is being generated.')
 
 
 class _EpisodeInline(admin.StackedInline):

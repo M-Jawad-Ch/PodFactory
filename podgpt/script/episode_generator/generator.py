@@ -7,7 +7,7 @@ from .overview import generate_episode_overview
 from .sections import generate_episode_section, generate_intro
 
 functions = {
-    'definations': {
+    'definations': [{
         "name": "wiki_search",
         "description": "Get the summarised articles from the Wikipedia.",
         "parameters": {
@@ -20,7 +20,7 @@ functions = {
                 },
             "required": ["topic"],
         },
-    },
+    }],
     'available_funcs': {
         'wiki_search': wiki_search
     }

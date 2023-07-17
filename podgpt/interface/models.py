@@ -54,6 +54,8 @@ class SeriesGenerator(models.Model):
     used = models.BooleanField(default=False)
     series = models.ForeignKey(
         Series, on_delete=models.SET_NULL, null=True, blank=True)
+    music = models.ForeignKey(
+        Music, on_delete=models.SET_NULL, null=True, blank=True)
 
     total_episodes = models.IntegerField(
         verbose_name='Total Episodes', default=0)

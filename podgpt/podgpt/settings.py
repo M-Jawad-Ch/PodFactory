@@ -10,11 +10,20 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-from pathlib import Path
 from os.path import join
+from pathlib import Path
+import openai
+import environ
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+env = environ.Env()
+environ.Env.read_env(join(BASE_DIR, '.env'))
+
+openai.api_key = env.get_value('OPENAI_API_KEY')
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,10 +47,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django-object-actions',
     'interface',
     'script',
     'audio',
+    'django_object_actions',
 ]
 
 MIDDLEWARE = [

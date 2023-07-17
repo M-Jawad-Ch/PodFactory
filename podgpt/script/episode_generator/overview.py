@@ -3,6 +3,22 @@ import json
 from .gpt import prompt_gpt, completion_to_content
 
 
+async def jsonify(text: str):
+    messages = [{'role': 'assistant', 'content': text}]
+    for _ in range(5):
+        try:
+            json.loads(text)
+            return text
+        except:
+            messages.append({
+                'role': 'user',
+                'content': 'Your response is not valid JSON, fix it.'
+            })
+
+            completion = await prompt_gpt(messages)
+            text = completion_to_content(completion)
+
+
 async def generate_overview(prompt: str, functions):
     messages = [
         {
@@ -52,8 +68,7 @@ The number of points in an episode must also be 15 - 20."""
 
         completion = await prompt_gpt(messages)
 
-    else:
-        return completion
+    return await jsonify(completion_to_content(completion))
 
 
 async def generate_episode_overview(prompt: str, guidelines: str, functions):
