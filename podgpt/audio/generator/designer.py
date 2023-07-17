@@ -3,7 +3,7 @@ from io import BytesIO
 from pydub import AudioSegment
 
 
-def compose(data: list[bytes]):
+def compose(data: list[bytes]) -> BytesIO:
     if not data:
         return
 

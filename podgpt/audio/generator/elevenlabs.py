@@ -3,7 +3,11 @@ import json
 
 from time import sleep
 
+from django.utils.text import slugify
+
 from audio.models import Audio
+
+from audio.generator.designer import compose
 
 
 class AudioSynthesiser:
@@ -21,7 +25,7 @@ class AudioSynthesiser:
     def request(self, content: str):
         status = 200
         for _ in range(5):
-            with requests.patch(
+            with requests.post(
                 f'https://api.elevenlabs.io/v1/text-to-speech/{self.voice_id}',
                 headers={
                     'accept': 'audio/mpeg',
@@ -39,7 +43,7 @@ class AudioSynthesiser:
 
         return status
 
-    def generate(self, content: list[str]):
+    def generate(self, title: str, content: list[str]) -> Audio:
         """
         Pass this into a thread. This function has sleep() in it so it will
         cause the main thread to sleep.
@@ -55,7 +59,15 @@ class AudioSynthesiser:
         for section in content:
             responses.append(self.request(section))
 
-        responses = [response.content for response in responses if type(
+        responses: list[bytes] = [response.content for response in responses if type(
             response) != type(1)]
 
+        audio_data = compose(responses)
+        audio_model = Audio.objects.create(name=title)
+        audio_model.audio_file.save(
+            name=slugify(title) + '.mp3', content=audio_data)
+
+        audio_model.save()
         AudioSynthesiser.running = False
+
+        return audio_model
