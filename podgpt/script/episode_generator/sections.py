@@ -3,6 +3,28 @@ import json
 from .gpt import prompt_gpt
 
 
+async def generate_plug(plug_info: str, past):
+    messages = [{
+        'role': 'system',
+        'content': f"""
+This is one of the services you provide:
+{plug_info}
+"""
+    },
+        {
+        'role': 'user',
+        'content': f"""
+This is a podcast episode, all the elements here are sections of the episode.
+{past}
+
+You are the host of a podcast episode. Advertise the above service to your listeners.
+The plug should only be a couple of sentences long.
+"""
+    }]
+
+    return await prompt_gpt(messages)
+
+
 async def generate_episode_section(prompt: str, episode_overview: dict, topic: str, past, guidelines: str, functions):
     guidelines = f'These are additional guidelines:\n{guidelines}' if guidelines else ''
 

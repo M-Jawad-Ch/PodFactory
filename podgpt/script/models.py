@@ -9,3 +9,6 @@ class Script(models.Model):
 
     class Meta:
         verbose_name = 'Script'
+
+    def __str__(self):
+        return self.title

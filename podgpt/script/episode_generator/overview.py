@@ -71,6 +71,35 @@ The number of points in an episode must also be 15 - 20."""
     return await jsonify(completion_to_content(completion))
 
 
+async def retry_json(content):
+    messages = [{
+        'role': 'assistant',
+        'content': content
+    },
+        {
+        'role': 'user',
+        'content': 'Your response is not valid JSON. Fix it and remove any repititions if necessary'
+    }]
+
+    completion = await prompt_gpt(messages)
+
+    for _ in range(5):
+        try:
+            return json.loads(completion_to_content(completion))
+        except:
+            print(completion_to_content(completion))
+            messages += [
+                {
+                    'role': 'assistant',
+                    'content': completion_to_content(content)
+                },
+                {
+                    'role': 'user',
+                    'content': "Again, your response is not valid json. Rewrite it in valid json"
+                }
+            ]
+
+
 async def generate_episode_overview(prompt: str, guidelines: str, functions):
     guidelines = f'These are additional guidelines:\n{guidelines}' if guidelines else ''
 
@@ -98,15 +127,15 @@ Your generated response must be in the above given syntax, meaning that you must
     completion = await prompt_gpt(messages, functions.get('definations'))
 
     if not completion:
-        return None
+        return await generate_episode_overview(prompt, guidelines, functions)
 
     func_call = completion['choices'][0]['message'].get('function_call')
 
     if func_call:
-        func = functions.get('available_funcs')[func_call['name']]
+        func = functions.get('available_funcs').get(func_call['name'])
         args = json.loads(func_call['arguments'])
 
-        res = await func(args.get('topic'))
+        res = await func(args.get('topic')) if func else ''
 
         messages.append({
             'role': 'function',
@@ -116,20 +145,9 @@ Your generated response must be in the above given syntax, meaning that you must
 
         return await prompt_gpt(messages)
 
-    for _ in range(5):
-        try:
-            json.loads(completion_to_content(completion))
-            return completion
-        except:
-            print('retrying json')
-            messages += [
-                {
-                    'role': 'assistant',
-                    'content': completion_to_content(completion)},
-                {
-                    'role': 'user',
-                    'content': "Your response is not a valid JSON. Make appropriate corrections and remove repititions if any."
-                }
-            ]
-
-            completion = await prompt_gpt(messages)
+    try:
+        return json.loads(completion_to_content(completion))
+    except:
+        return await retry_json(
+            completion_to_content(completion)
+        )

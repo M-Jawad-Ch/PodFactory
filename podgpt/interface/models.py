@@ -1,6 +1,7 @@
 from django.db import models
 
 from script.models import Script
+from audio.models import Audio
 
 
 class Music(models.Model):
@@ -12,7 +13,7 @@ class Music(models.Model):
 
     class Meta:
         verbose_name = 'Music'
-        verbose_name_plural = 'C - Music'
+        verbose_name_plural = 'D - Music'
 
 
 class Series(models.Model):
@@ -37,10 +38,13 @@ class Episode(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     script = models.ForeignKey(
         Script, on_delete=models.SET_NULL, null=True, blank=True)
+    episode_number = models.IntegerField(default=0)
+    audio = models.ForeignKey(
+        Audio, on_delete=models.CASCADE, default=None, null=True)
 
     class Meta:
         verbose_name = 'Episode'
-        verbose_name_plural = 'C - Episodes'
+        verbose_name_plural = 'D - Episodes'
 
     def __str__(self):
         return self.name
@@ -57,14 +61,20 @@ class SeriesGenerator(models.Model):
     music = models.ForeignKey(
         Music, on_delete=models.SET_NULL, null=True, blank=True)
 
-    total_episodes = models.IntegerField(
-        verbose_name='Total Episodes', default=0)
-    episodes_generated = models.IntegerField(
-        verbose_name='Generated Episodes', default=0)
-
     def __str__(self):
         return self.title
 
     class Meta:
         verbose_name = 'Series Generator'
         verbose_name_plural = 'A - Series Generators'
+
+
+class Plug(models.Model):
+    content = models.TextField()
+
+    def __str__(self):
+        return self.content
+
+    class Meta:
+        verbose_name = 'Plug'
+        verbose_name_plural = 'C - Plug'

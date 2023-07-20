@@ -3,7 +3,7 @@ import aiolimiter
 import tiktoken
 
 limiter = aiolimiter.AsyncLimiter(60, 1)
-enc = tiktoken.get_encoding("cl100k_base")
+enc = None
 
 
 def completion_to_content(x): return x['choices'][0]['message']['content']
@@ -59,4 +59,5 @@ Summarize the given article."""
 
 
 def get_token_count(s: str):
+    enc = tiktoken.get_encoding("cl100k_base") if not enc else enc
     return len(enc.encode(s))
