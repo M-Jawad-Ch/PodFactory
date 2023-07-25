@@ -37,7 +37,7 @@ class Episode(models.Model):
     series = models.ForeignKey(Series, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
     script = models.ForeignKey(
-        Script, on_delete=models.SET_NULL, null=True, blank=True)
+        Script, on_delete=models.CASCADE, null=True, blank=True)
     episode_number = models.IntegerField(default=0)
     audio = models.ForeignKey(
         Audio, on_delete=models.CASCADE, default=None, null=True)

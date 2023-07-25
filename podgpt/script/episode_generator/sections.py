@@ -25,7 +25,15 @@ The plug should only be a couple of sentences long.
     return await prompt_gpt(messages)
 
 
-async def generate_episode_section(prompt: str, episode_overview: dict, topic: str, past, guidelines: str, functions):
+async def generate_episode_section(
+    prompt: str,
+    episode_overview: dict,
+    topic: str,
+    past,
+    guidelines: str,
+    functions
+):
+
     guidelines = f'These are additional guidelines:\n{guidelines}' if guidelines else ''
 
     messages = [

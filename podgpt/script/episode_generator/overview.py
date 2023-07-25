@@ -143,7 +143,7 @@ Your generated response must be in the above given syntax, meaning that you must
             'content': f'{res}'
         })
 
-        return await prompt_gpt(messages)
+        completion = await prompt_gpt(messages)
 
     try:
         return json.loads(completion_to_content(completion))

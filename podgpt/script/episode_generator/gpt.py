@@ -1,6 +1,7 @@
 import openai
 import aiolimiter
 import tiktoken
+import json
 
 limiter = aiolimiter.AsyncLimiter(60, 1)
 enc = None
@@ -20,12 +21,56 @@ async def prompt_gpt(messages, functions=None):
                     functions=functions
                 )
 
+                try:
+                    with open('alpha.json', 'r') as f:
+                        data = json.load(f)
+
+                    if not data:
+                        data = []
+
+                    if completion_to_content(completion):
+                        data.append(
+                            [
+                                *[
+                                    message['content'] for message in messages[-2:]
+                                ],
+                                completion_to_content(completion)
+                            ]
+                        )
+
+                    with open('alpha.json', 'w') as f:
+                        f.write(json.dumps(data, indent=4))
+                except:
+                    print('Failed')
+
                 return completion
             else:
                 completion = await openai.ChatCompletion.acreate(
                     messages=messages,
                     model='gpt-3.5-turbo-16k',
                 )
+
+                try:
+                    with open('alpha.json', 'r') as f:
+                        data = json.load(f)
+
+                    if not data:
+                        data = []
+
+                    if completion_to_content(completion):
+                        data.append(
+                            [
+                                *[
+                                    message['content'] for message in messages[-2:]
+                                ],
+                                completion_to_content(completion)
+                            ]
+                        )
+
+                    with open('alpha.json', 'w') as f:
+                        f.write(json.dumps(data, indent=4))
+                except:
+                    print('Failed')
 
                 return completion
         except Exception as e:

@@ -38,32 +38,36 @@ async def generate_episode(overview: str, topic: str, guidelines: str, plug_info
                 section,
                 episode_overview,
                 topic,
-                contents,
+                contents[-2:],
                 guidelines,
                 functions
             ))
 
-    sections = []
+    center = int(len(contents) / 2)
+    temp = []
 
-    for content in contents:
-        if sections and plug_info:
-            try:
-                sections.append(
-                    await generate_plug(
-                        plug_info,
-                        [
-                            completion_to_content(content)
-                            for content in sections
-                        ]
+    for idx, content in enumerate(contents):
+        if idx == center:
+            if contents and plug_info:
+                try:
+                    temp.append(
+                        await generate_plug(
+                            plug_info,
+                            [
+                                completion_to_content(content)
+                                for content in contents
+                            ]
+                        )
                     )
-                )
-            except Exception as e:
-                print(e)
-                pass
+                except Exception as e:
+                    print(e)
+                    pass
+            temp.append(content)
 
-        sections.append(content)
+        else:
+            temp.append(content)
 
-    contents = sections
+    contents = temp
 
     contents = [completion_to_content(completion)
                 for completion in contents if completion]
