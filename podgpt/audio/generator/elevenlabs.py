@@ -6,7 +6,6 @@ from time import sleep
 from django.utils.text import slugify
 
 from audio.models import Audio
-
 from audio.generator.designer import compose
 
 

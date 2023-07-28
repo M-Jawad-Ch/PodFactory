@@ -10,7 +10,6 @@ class AudioConfig(AppConfig):
     name = 'audio'
 
     def ready(self) -> None:
-
         env = environ.Env()
         environ.Env.read_env(join(settings.BASE_DIR, '.env'))
 

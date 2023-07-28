@@ -6,3 +6,6 @@ from django.db import models
 class Audio(models.Model):
     name = models.CharField(max_length=200)
     audio_file = models.FileField(verbose_name='file')
+
+    def __str__(self):
+        return self.name

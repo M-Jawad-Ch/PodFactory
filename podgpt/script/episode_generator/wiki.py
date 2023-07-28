@@ -27,7 +27,7 @@ async def wiki_search(topic: str):
             async with session.get(f'https://en.wikipedia.org/w/api.php?format=json&action=query&list=search&srsearch={topic}&format=json') as response:
                 titles = (await response.json())['query']['search']
 
-            text = await asyncio.gather(*[wiki_get(session, item['title']) for item in titles])
+            text = await asyncio.gather(*[wiki_get(session, item['title']) for item in titles[:3]])
 
         return text
 

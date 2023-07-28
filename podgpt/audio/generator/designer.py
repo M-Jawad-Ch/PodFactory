@@ -7,9 +7,10 @@ def compose(data: list[bytes]) -> BytesIO:
     if not data:
         return
 
-    result: AudioSegment = AudioSegment.from_mp3(BytesIO(data[0]))
-    for idx in range(1, len(data)):
-        _section = AudioSegment.from_mp3(BytesIO(data[idx]))
-        result = result.append(_section + AudioSegment.silent(10_000))
+    result = AudioSegment.silent(1_000)
+
+    for section in data:
+        result += AudioSegment.silent(1_000) + \
+            AudioSegment.from_mp3(BytesIO(section))
 
     return result.export()

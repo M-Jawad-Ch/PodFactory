@@ -1,0 +1,29 @@
+body {
+    margin: 3em 10em;
+}
+
+h1 {
+    text-align: center;
+}
+
+p {
+    text-align: justify;
+}
+
+@media (max-width: 800px) {
+    body {
+        margin: 3em 5em;
+    }
+}
+
+@media (max-width: 650px) {
+    body {
+        margin: 3em 2em;
+    }
+}
+
+@media (max-width: 450px) {
+    body {
+        margin: 3em 0.5em;
+    }
+}

@@ -5,6 +5,7 @@ import json
 
 limiter = aiolimiter.AsyncLimiter(60, 1)
 enc = None
+model = 'gpt-3.5-turbo-16k-0613'  # 'gpt-4-0613'
 
 
 def completion_to_content(x): return x['choices'][0]['message']['content']
@@ -17,7 +18,7 @@ async def prompt_gpt(messages, functions=None):
             if functions:
                 completion = await openai.ChatCompletion.acreate(
                     messages=messages,
-                    model='gpt-3.5-turbo-16k',
+                    model=model,
                     functions=functions
                 )
 
@@ -47,7 +48,7 @@ async def prompt_gpt(messages, functions=None):
             else:
                 completion = await openai.ChatCompletion.acreate(
                     messages=messages,
-                    model='gpt-3.5-turbo-16k',
+                    model=model,
                 )
 
                 try:

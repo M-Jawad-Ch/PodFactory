@@ -18,8 +18,6 @@ class Music(models.Model):
 
 class Series(models.Model):
     name = models.CharField(max_length=200)
-    music = models.ForeignKey(
-        Music, on_delete=models.SET_NULL, null=True, blank=True)
 
     def episodes(self):
         return Episode.objects.filter(series=self).all()
@@ -58,15 +56,15 @@ class SeriesGenerator(models.Model):
     used = models.BooleanField(default=False)
     series = models.ForeignKey(
         Series, on_delete=models.SET_NULL, null=True, blank=True)
-    music = models.ForeignKey(
-        Music, on_delete=models.SET_NULL, null=True, blank=True)
+    audio_generator_running = models.BooleanField(default=False)
+    audio_generated = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
 
     class Meta:
-        verbose_name = 'Series Generator'
-        verbose_name_plural = 'A - Series Generators'
+        verbose_name = 'Generator'
+        verbose_name_plural = 'A - Generators'
 
 
 class Plug(models.Model):

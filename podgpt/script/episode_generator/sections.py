@@ -19,6 +19,8 @@ This is a podcast episode, all the elements here are sections of the episode.
 
 You are the host of a podcast episode. Advertise the above service to your listeners.
 The plug should only be a couple of sentences long.
+
+Use the word 'dot' where ever the speaker should pronounce it.
 """
     }]
 
@@ -54,9 +56,9 @@ Adhere to the following guidelines:
 - Use active voice
 - Use simple sentences
 
-Try to make the podcast sound like you are telling a story. Make it seem like an amazaing experience,
+Try to make the podcast sound like you are telling a story. Make it seem like an amazing experience,
 and walk the listner through the environment. Make them imagine the sounds and the places. You are the narrator
-of the story.
+of the story. Only write the words that are to be spoken by the narrator. Donot add notations denoting the presence of musicor other sound effects.
 
 Remember, the data received from the wikipeida articles is not ours.
 

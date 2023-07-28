@@ -2,6 +2,8 @@ from django.contrib import admin, messages
 from django.http.request import HttpRequest
 from django_object_actions import action, DjangoObjectActions
 
+import json
+
 from threading import Thread
 
 from .models import SeriesGenerator, Music, Series, Episode, Plug
@@ -12,12 +14,13 @@ from audio.generator.elevenlabs import AudioSynthesiser
 
 @admin.register(SeriesGenerator)
 class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
-    readonly_fields = ['timestamp', 'running', 'used', 'series']
+    readonly_fields = ['timestamp', 'running', 'used',
+                       'series', 'audio_generator_running', 'audio_generated']
     list_display = ['title', 'running', 'used', 'series', 'timestamp']
 
-    change_actions = ('generate',)
+    change_actions = ('generate', 'synthesize')
 
-    def thread_func(self, obj: SeriesGenerator):
+    def series_thread_func(self, obj: SeriesGenerator):
         obj.running = True
         obj.save()
 
@@ -47,11 +50,6 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
 
         obj.series = series
 
-        """synthesiser = AudioSynthesiser()
-        for idx, episode in enumerate(episodes):
-            episode.audio = synthesiser.generate(
-                episode.name, episode.script.contents)"""
-
         obj.running = False
         obj.used = True
         obj.save()
@@ -59,17 +57,54 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
     @action(label='Generate', description='Generate an entire series')
     def generate(self, request, obj: SeriesGenerator):
         if obj.used:
-            # return messages.warning(request, 'The Series has already been generated.')
-            pass
+            return messages.warning(request, 'The Series has already been generated.')
 
         if obj.running:
-            # return messages.warning(request, 'This Series is already being generated.')
-            pass
+            return messages.warning(request, 'This Series is already being generated.')
 
-        thread = Thread(target=self.thread_func, args=[obj], daemon=True)
-        thread.start()
+        Thread(
+            target=self.series_thread_func,
+            args=[obj],
+            daemon=True
+        ).start()
 
         return messages.success(request, 'The Series is being generated.')
+
+    def audio_thread_func(self, obj: SeriesGenerator):
+        obj.audio_generator_running = True
+        obj.audio_generated = False
+        obj.save()
+
+        synthesiser = AudioSynthesiser()
+        episodes = obj.series.episodes()
+
+        for idx, episode in enumerate(episodes):
+            episode.audio = synthesiser.generate(
+                episode.name, json.loads(episode.script.contents))
+
+            episode.save()
+
+        obj.audio_generator_running = False
+        obj.audio_generated = True
+        obj.save()
+
+    @action(label='Synthesize', description='Generate Audio')
+    def synthesize(self, request, obj: SeriesGenerator):
+        if obj.audio_generated:
+            # return messages.warning(request, 'The audio has already been generated.')
+            pass
+
+        if obj.audio_generator_running:
+            # return messages.warning(request, 'The audio is already being generated.')
+            pass
+
+        Thread(
+            target=self.audio_thread_func,
+            args=[obj],
+            daemon=True
+        ).start()
+
+        return messages.success(request, 'The audio generation has started.')
 
 
 class _EpisodeInline(admin.StackedInline):

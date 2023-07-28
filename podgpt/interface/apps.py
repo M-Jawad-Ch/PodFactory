@@ -15,6 +15,14 @@ class InterfaceConfig(AppConfig):
                 generator.used = False
                 generator.save()
 
+            generators = SeriesGenerator.objects.filter(
+                audio_generator_running=True).all()
+
+            for generator in generators:
+                generator.audio_generator_running = False
+                generator.audio_generated = False
+                generator.save()
+
         except:
             pass
         return super().ready()
