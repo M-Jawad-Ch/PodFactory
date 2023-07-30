@@ -78,9 +78,13 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
         synthesiser = AudioSynthesiser()
         episodes = obj.series.episodes()
 
-        for idx, episode in enumerate(episodes):
+        for episode in episodes:
             episode.audio = synthesiser.generate(
-                episode.name, json.loads(episode.script.contents))
+                episode.name,
+                json.loads(episode.script.contents),
+                obj.intro,
+                obj.outro
+            )
 
             episode.save()
 

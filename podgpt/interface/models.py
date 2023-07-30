@@ -59,6 +59,22 @@ class SeriesGenerator(models.Model):
     audio_generator_running = models.BooleanField(default=False)
     audio_generated = models.BooleanField(default=False)
 
+    intro = models.ForeignKey(
+        Music,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='%(class)s_intro',
+        blank=True
+    )
+
+    outro = models.ForeignKey(
+        Music,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='%(class)s_outro',
+        blank=True
+    )
+
     def __str__(self):
         return self.title
 

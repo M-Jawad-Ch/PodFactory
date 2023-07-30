@@ -5,6 +5,7 @@ from time import sleep
 
 from django.utils.text import slugify
 
+from interface.models import Music
 from audio.models import Audio
 from audio.generator.designer import compose
 
@@ -42,7 +43,7 @@ class AudioSynthesiser:
 
         return status
 
-    def generate(self, title: str, content: list[str]) -> Audio:
+    def generate(self, title: str, content: list[str], intro: Music, outro: Music) -> Audio:
         """
         Pass this into a thread. This function has sleep() in it so it will
         cause the main thread to sleep.
@@ -61,7 +62,7 @@ class AudioSynthesiser:
         responses: list[bytes] = [response.content for response in responses if type(
             response) != type(1)]
 
-        audio_data = compose(responses)
+        audio_data = compose(responses, intro, outro)
         audio_model = Audio.objects.create(name=title)
         audio_model.audio_file.save(
             name=slugify(title) + '.mp3', content=audio_data)
