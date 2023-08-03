@@ -38,7 +38,7 @@ class Episode(models.Model):
         Script, on_delete=models.CASCADE, null=True, blank=True)
     episode_number = models.IntegerField(default=0)
     audio = models.ForeignKey(
-        Audio, on_delete=models.CASCADE, default=None, null=True)
+        Audio, on_delete=models.SET_NULL, default=None, null=True)
 
     class Meta:
         verbose_name = 'Episode'
@@ -52,12 +52,23 @@ class SeriesGenerator(models.Model):
     title = models.CharField(max_length=200)
     guide_lines = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    running = models.BooleanField(default=False)
-    used = models.BooleanField(default=False)
+    running = models.BooleanField(
+        default=False, verbose_name='Script generator running')
+    used = models.BooleanField(default=False, verbose_name='Script generated')
     series = models.ForeignKey(
         Series, on_delete=models.SET_NULL, null=True, blank=True)
     audio_generator_running = models.BooleanField(default=False)
     audio_generated = models.BooleanField(default=False)
+    remixing = models.BooleanField(default=False)
+    remixed = models.BooleanField(default=False)
+
+    music = models.ForeignKey(
+        Music,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='%(class)s_music',
+        blank=True
+    )
 
     intro = models.ForeignKey(
         Music,

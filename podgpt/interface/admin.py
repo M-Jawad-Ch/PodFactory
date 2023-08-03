@@ -5,20 +5,32 @@ from django_object_actions import action, DjangoObjectActions
 import json
 
 from threading import Thread
+from time import sleep
+from pydub import AudioSegment
 
 from .models import SeriesGenerator, Music, Series, Episode, Plug
 from script.series_generator.generate import generate_series
 from script.models import Script
 from audio.generator.elevenlabs import AudioSynthesiser
+from audio.generator.designer import add_music, intro_outro
 
 
 @admin.register(SeriesGenerator)
 class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
-    readonly_fields = ['timestamp', 'running', 'used',
-                       'series', 'audio_generator_running', 'audio_generated']
+    readonly_fields = [
+        'timestamp',
+        'running',
+        'used',
+        'series',
+        'audio_generator_running',
+        'audio_generated',
+        'remixing',
+        'remixed'
+    ]
+
     list_display = ['title', 'running', 'used', 'series', 'timestamp']
 
-    change_actions = ('generate', 'synthesize')
+    change_actions = ('generate', 'synthesize', 'remix')
 
     def series_thread_func(self, obj: SeriesGenerator):
         obj.running = True
@@ -36,7 +48,7 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
             obj.save()
             return
 
-        series = Series.objects.create(name=obj.title, music=obj.music)
+        series = Series.objects.create(name=obj.title)
 
         episodes: list[Episode] = []
 
@@ -79,11 +91,13 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
         episodes = obj.series.episodes()
 
         for episode in episodes:
+            if episode.audio:
+                episode.audio.delete()
+                episode.audio.save()
+
             episode.audio = synthesiser.generate(
                 episode.name,
-                json.loads(episode.script.contents),
-                obj.intro,
-                obj.outro
+                json.loads(episode.script.contents)
             )
 
             episode.save()
@@ -95,12 +109,10 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
     @action(label='Synthesize', description='Generate Audio')
     def synthesize(self, request, obj: SeriesGenerator):
         if obj.audio_generated:
-            # return messages.warning(request, 'The audio has already been generated.')
-            pass
+            return messages.warning(request, 'The audio has already been generated.')
 
         if obj.audio_generator_running:
-            # return messages.warning(request, 'The audio is already being generated.')
-            pass
+            return messages.warning(request, 'The audio is already being generated.')
 
         Thread(
             target=self.audio_thread_func,
@@ -109,6 +121,43 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
         ).start()
 
         return messages.success(request, 'The audio generation has started.')
+
+    def remix_thread_function(self, generator: SeriesGenerator):
+        generator.remixing = True
+        generator.remixed = False
+        generator.save()
+
+        episodes = generator.series.episodes()
+        for episode in episodes:
+            audio = episode.audio
+            audio = AudioSegment.from_file(audio.audio_file.file)
+            audio = add_music(audio, generator.music)
+            audio = intro_outro(audio, generator.intro, generator.outro)
+
+            episode.audio.audio_file.save(
+                name=episode.audio.audio_file.name, content=audio.export())
+
+            episode.audio.save()
+
+        generator.remixing = False
+        generator.remixed = True
+        generator.save()
+
+    @action(label='Remix', description='Add Music')
+    def remix(self, request, obj: SeriesGenerator):
+        if obj.remixing:
+            return messages.warn(request, 'The audio is already remixing.')
+
+        if obj.remixed:
+            return messages.warn(request, 'The audio has already remixed.')
+
+        Thread(
+            target=self.remix_thread_function,
+            daemon=True,
+            args=[obj]
+        ).start()
+
+        return messages.success(request, 'The remixing has started.')
 
 
 class _EpisodeInline(admin.StackedInline):

@@ -7,7 +7,10 @@ from django.utils.text import slugify
 
 from interface.models import Music
 from audio.models import Audio
-from audio.generator.designer import compose
+from audio.generator.designer import compose, add_music, intro_outro
+
+from pydub import AudioSegment
+from io import BytesIO
 
 
 class AudioSynthesiser:
@@ -43,7 +46,7 @@ class AudioSynthesiser:
 
         return status
 
-    def generate(self, title: str, content: list[str], intro: Music, outro: Music) -> Audio:
+    def generate(self, title: str, content: list[str]) -> Audio:
         """
         Pass this into a thread. This function has sleep() in it so it will
         cause the main thread to sleep.
@@ -54,20 +57,23 @@ class AudioSynthesiser:
 
         AudioSynthesiser.running = True
 
-        responses: list[requests.Response | int] = []
+        audio = AudioSegment.silent(1_000)
 
         for section in content:
-            responses.append(self.request(section))
+            response = self.request(section)
 
-        responses: list[bytes] = [response.content for response in responses if type(
-            response) != type(1)]
+            if type(response) == type(1):
+                continue
 
-        audio_data = compose(responses, intro, outro)
+            audio += AudioSegment.silent(2_000) + \
+                AudioSegment.from_file(BytesIO(response.content))
+
         audio_model = Audio.objects.create(name=title)
-        audio_model.audio_file.save(
-            name=slugify(title) + '.mp3', content=audio_data)
 
+        audio_model.audio_file.save(
+            name=slugify(title) + '.mp3', content=audio.export())
         audio_model.save()
+
         AudioSynthesiser.running = False
 
         return audio_model

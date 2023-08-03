@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'script',
     'audio',
     'django_object_actions',
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [
