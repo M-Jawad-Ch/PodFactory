@@ -145,6 +145,8 @@ MEDIA_URL = 'media/'
 
 MEDIA_ROOT = join(BASE_DIR.absolute(), MEDIA_URL)
 
+SITE_ID = 1
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
