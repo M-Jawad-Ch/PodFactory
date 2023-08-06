@@ -2,7 +2,7 @@ import requests
 import json
 
 from time import sleep
-
+from io import BytesIO
 from django.utils.text import slugify
 from django.contrib.sites.models import Site
 from audio.models import Audio

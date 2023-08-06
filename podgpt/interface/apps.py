@@ -21,6 +21,11 @@ class InterfaceConfig(AppConfig):
             for generator in generators:
                 generator.audio_generator_running = False
                 generator.audio_generated = False
+                
+                if generator.remixing:
+                    generator.remixing = False
+                    generator.remixed = False
+
                 generator.save()
 
         except:

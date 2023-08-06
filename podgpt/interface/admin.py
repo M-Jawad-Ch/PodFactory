@@ -130,7 +130,6 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
         episodes = generator.series.episodes()
         for episode in episodes:
             audio = episode.audio
-            audio = AudioSegment.from_file(audio.audio_file.file)
 
             site = Site.objects.first()
 

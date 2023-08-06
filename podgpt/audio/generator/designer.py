@@ -57,7 +57,11 @@ def intro_outro(audio: Audio, intro: Music, outro: Music, site: Site):
     if res.status_code == 200 and res.json().get('success'):
         bytesIo = BytesIO()
         download('blake-message-bucket', 'final.mp3', bytesIo)
-        audio.audio_file.save(content=bytes)
+        audio.audio_file.save(
+            name=audio.audio_file.name,
+            content=bytesIo
+        )
+
         return audio
 
 
@@ -67,7 +71,7 @@ def compose(data: list[bytes], site: Site) -> bytes | None:
     for idx, audio in enumerate(Audios):
         audio.audio_file.save(
             name=audio.name + '.mp3',
-            content=data[idx]
+            content=BytesIO(data[idx])
         )
 
     urls = ['http://' + site.domain + audio.audio_file.url
@@ -105,6 +109,9 @@ def add_music(audio: Audio, music: Music, site: Site) -> Audio:
     if res.status_code == 200 and res.json().get('success'):
         bytesIo = BytesIO()
         download('blake-message-bucket', 'final.mp3', bytesIo)
-        audio.audio_file.save(content=bytesIo)
+        audio.audio_file.save(
+            name=audio.audio_file.name,
+            content=bytesIo
+        )
 
         return audio
