@@ -1,88 +1,110 @@
+import boto3
+import requests
+import json
+
+from botocore.exceptions import NoCredentialsError
+from django.conf import settings
+
+from pydub import AudioSegment
 from io import BytesIO
 
-import numpy as np
-from math import ceil
-from pydub import AudioSegment
-from pydub.effects import speedup
+from django.contrib.sites.models import Site
+from audio.models import Audio
+from interface.models import Music
 
-from interface.models import Music, Audio
-
-
-def compose(data: list[bytes]):
-    if not data:
-        return
-
-    result = AudioSegment.silent(1_000)
-
-    for section in data:
-        result += AudioSegment.silent(5_000) + \
-            AudioSegment.from_mp3(BytesIO(section))
-
-    return result
+function_url = 'https://il774ictmvehzycz4ghcdfoffa0dtonk.lambda-url.ap-south-1.on.aws/'
 
 
-def intro_outro(audio: AudioSegment, intro: Music, outro: Music):
-    if intro:
-        intro: AudioSegment = AudioSegment.from_file(intro._file.file)
-
-    if outro:
-        outro: AudioSegment = AudioSegment.from_file(outro._file.file)
-
-    if intro:
-        audio = intro + AudioSegment.silent(1_500) + audio
-
-    if outro:
-        audio = audio + AudioSegment.silent(1_500) + outro
-
-    return audio
-
-
-def add_music(audio: AudioSegment, _music: Music):
-    music: AudioSegment = AudioSegment.from_file(_music._file.file)
-    music -= 25
-
-    audio = audio.overlay(music, loop=True)
-
-    return audio
-
-    """music = music.set_channels(1)
-    audio = audio.set_channels(1)
-
-    rate = audio.frame_count() / audio.duration_seconds
-    music_rate = music.frame_count() / music.duration_seconds
-
-    if rate < music_rate:
-        audio = speedup(audio, music_rate / rate)
-        audio.set_frame_rate(int(music_rate))
-    else:
-        music = speedup(music, rate/music_rate)
-        music.set_frame_rate(int(rate))
-
-    audio = np.array(audio.get_array_of_samples())
-    music = np.array(music.get_array_of_samples())
-
-    music = music * audio.mean() / music.mean()
-
-    music = music[:len(audio)]
-    times = len(audio) / len(music)
-    music = np.resize(music, ceil(len(music)*times))
-    music = music[:len(audio)]
-
-    audio: np.ndarray = audio / audio.max()
-    music: np.ndarray = music / music.max()
-
-    music = music / (abs(audio) + 1) ** 3
-    music /= 6
-
-    final_samples = music + audio
-
-    final_samples = np.int32(final_samples * 10**9)
-
-    final_samples = AudioSegment(
-        final_samples.tobytes(),
-        frame_rate=int(max(rate, music_rate)),
-        sample_width=final_samples.dtype.itemsize,
-        channels=1
+def download(bucket, fileName, file):
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id=settings.AWS_ACCESS_KEY,
+        aws_secret_access_key=settings.AWS_SECRET_KEY
     )
 
-    return final_samples"""
+    s3.download_fileobj(bucket, fileName, file)
+
+
+def upload_to_aws(local_file, bucket, s3_file):
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id=settings.AWS_ACCESS_KEY,
+        aws_secret_access_key=settings.AWS_SECRET_KEY
+    )
+
+    try:
+        s3.upload_fileobj(local_file, bucket, s3_file)
+        return True
+    except FileNotFoundError:
+        print('File not found')
+        return False
+    except NoCredentialsError:
+        print('Credentials not available')
+        return False
+
+
+def intro_outro(audio: Audio, intro: Music, outro: Music, site: Site):
+    res = requests.post(
+        function_url,
+        data=json.dumps({
+            'type': 'intro_outro',
+            'audio': 'http://' + site.domain + audio.audio_file.url,
+            'intro': 'http://' + site.domain + intro._file.url if intro else None,
+            'outro': 'http://' + site.domain + outro._file.url if outro else None
+        })
+    )
+
+    if res.status_code == 200 and res.json().get('success'):
+        bytesIo = BytesIO()
+        download('blake-message-bucket', 'final.mp3', bytesIo)
+        audio.audio_file.save(content=bytes)
+        return audio
+
+
+def compose(data: list[bytes], site: Site) -> bytes | None:
+    Audios = [Audio.objects.create() for _ in range(len(data))]
+
+    for idx, audio in enumerate(Audios):
+        audio.audio_file.save(
+            name=audio.name + '.mp3',
+            content=data[idx]
+        )
+
+    urls = ['http://' + site.domain + audio.audio_file.url
+            for audio in Audios]
+
+    res = requests.get(
+        function_url,
+        data=json.dumps({
+            'type': 'compose',
+            'urls': urls
+        })
+    )
+
+    if res.status_code == 200 and res.json().get('success'):
+        [audio.delete() for audio in Audios]
+
+        bytesIo = BytesIO()
+        download('blake-message-bucket', 'final.mp3', bytesIo)
+        return bytesIo
+
+
+def add_music(audio: Audio, music: Music, site: Site) -> Audio:
+    audio_url = 'http://' + site.domain + audio.audio_file.url
+    music_url = 'http://' + site.domain + music._file.url
+
+    res = requests.post(
+        function_url,
+        data=json.dumps({
+            'type': 'add_music',
+            'music': music_url,
+            'audio': audio_url
+        })
+    )
+
+    if res.status_code == 200 and res.json().get('success'):
+        bytesIo = BytesIO()
+        download('blake-message-bucket', 'final.mp3', bytesIo)
+        audio.audio_file.save(content=bytesIo)
+
+        return audio

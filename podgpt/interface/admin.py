@@ -1,11 +1,11 @@
 from django.contrib import admin, messages
 from django.http.request import HttpRequest
 from django_object_actions import action, DjangoObjectActions
+from django.contrib.sites.models import Site
 
 import json
 
 from threading import Thread
-from time import sleep
 from pydub import AudioSegment
 
 from .models import SeriesGenerator, Music, Series, Episode, Plug
@@ -131,13 +131,16 @@ class _SeriesGenerator(DjangoObjectActions, admin.ModelAdmin):
         for episode in episodes:
             audio = episode.audio
             audio = AudioSegment.from_file(audio.audio_file.file)
-            audio = add_music(audio, generator.music)
-            audio = intro_outro(audio, generator.intro, generator.outro)
 
-            episode.audio.audio_file.save(
-                name=episode.audio.audio_file.name, content=audio.export())
+            site = Site.objects.first()
 
-            episode.audio.save()
+            audio = add_music(audio, generator.music, site)
+            audio = intro_outro(
+                audio,
+                generator.intro,
+                generator.outro,
+                site
+            )
 
         generator.remixing = False
         generator.remixed = True

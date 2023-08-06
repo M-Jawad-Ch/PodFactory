@@ -4,13 +4,9 @@ import json
 from time import sleep
 
 from django.utils.text import slugify
-
-from interface.models import Music
+from django.contrib.sites.models import Site
 from audio.models import Audio
-from audio.generator.designer import compose, add_music, intro_outro
-
-from pydub import AudioSegment
-from io import BytesIO
+from audio.generator.designer import compose
 
 
 class AudioSynthesiser:
@@ -55,9 +51,10 @@ class AudioSynthesiser:
         while (AudioSynthesiser.running):
             sleep(0.2)
 
-        AudioSynthesiser.running = True
+        site = Site.objects.first()
 
-        audio = AudioSegment.silent(1_000)
+        AudioSynthesiser.running = True
+        data = []
 
         for section in content:
             response = self.request(section)
@@ -65,13 +62,17 @@ class AudioSynthesiser:
             if type(response) == type(1):
                 continue
 
-            audio += AudioSegment.silent(2_000) + \
-                AudioSegment.from_file(BytesIO(response.content))
+            data.append(response.content)
 
         audio_model = Audio.objects.create(name=title)
 
+        bytesIo = compose(data, site)
+
         audio_model.audio_file.save(
-            name=slugify(title) + '.mp3', content=audio.export())
+            name=slugify(title) + '.mp3',
+            content=bytesIo
+        )
+
         audio_model.save()
 
         AudioSynthesiser.running = False

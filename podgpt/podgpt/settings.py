@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from os.path import join
 from pathlib import Path
 import openai
@@ -35,7 +36,7 @@ SECRET_KEY = 'django-insecure-rnf8vi0il_j^09*i!&3&jp3i7x&9axonx)&j%lk3=(1qkkoe3^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'interface',
     'script',
     'audio',
@@ -83,6 +85,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'podgpt.wsgi.application'
+
+
+AWS_ACCESS_KEY = env.get_value('AWS_ACCESS_KEY')
+AWS_SECRET_KEY = env.get_value('AWS_SECRET_KEY')
 
 
 # Database
@@ -132,6 +138,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+
 MEDIA_URL = 'media/'
 
 MEDIA_ROOT = join(BASE_DIR.absolute(), MEDIA_URL)
@@ -140,3 +149,7 @@ MEDIA_ROOT = join(BASE_DIR.absolute(), MEDIA_URL)
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STATIC_DIRS = (
+    os.path.join(BASE_DIR, 'static')
+)
