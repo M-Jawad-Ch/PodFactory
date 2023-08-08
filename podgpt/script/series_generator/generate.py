@@ -18,8 +18,8 @@ def generate_series(title: str, guidelines: str, plug_info):
     overview = json.loads(overview)
 
     episodes = asyncio.gather(*[
-        generate_episode(overview_episode, title, guidelines, plug_info) for overview_episode in overview[:1]
-    ])  # Edit needed.
+        generate_episode(overview_episode, title, guidelines, plug_info) for overview_episode in overview
+    ])
 
     episodes = loop.run_until_complete(episodes)
     loop.close()
